@@ -11,6 +11,10 @@ class Blackjack:
     def __init__(self):
         # Randomness of cut card
         __stopPercentage = random.randint(45, 55)
+        # Dealers hand
+        self.dealerhand = list()
+        # Player hand
+        self.playerhand = list()
         # Calculate deck size
         self.totalCardCount = DECK_COUNT * ONE_DECK_SIZE
         # Cut card in deck
@@ -31,8 +35,29 @@ class Blackjack:
     def getrandomcard(self):
         card, cardcount = random.choice(list(self.deckofgamecards.items()))
         if cardcount != 0:
-            cardcount -= 1
-            self.deckofgamecards[card] = cardcount
+            self.removecardfromdeck(card)
         else:
             card = self.getrandomcard()
         return card
+
+    def removecardfromdeck(self, card):
+        self.deckofgamecards[card] = self.deckofgamecards[card] - 1
+
+    def calculatesoft(self, hand):
+        soft = 0
+        nonsoft = 0
+        for handcard in hand:
+            nonsoft += handcard
+            if handcard == 1:
+                soft = soft + handcard + 10
+            else:
+                soft = soft + handcard
+        return [nonsoft, soft]
+
+    def calculatepoint(self, hand):
+        if 1 in hand:
+            result = self.calculatesoft(hand)
+            return result
+        else:
+            preresult = sum(hand)
+            return [preresult, preresult]

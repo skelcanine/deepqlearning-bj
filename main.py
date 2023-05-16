@@ -16,10 +16,19 @@ class Table:
         self.game = Blackjack.Blackjack()
 
     def newround(self):
-        pass
+        self.game.playerhand.append(self.game.getrandomcard())
+        self.game.dealerhand.append(self.game.getrandomcard())
+        self.game.playerhand.append(self.game.getrandomcard())
+        self.game.dealerhand.append(self.game.getrandomcard())
+
 
 
 env = Table()
 
 # print(env.cardCountStop)
-print(env.getrandomcard())
+env.newround()
+
+print(env.game.dealerhand)
+print(env.game.calculatepoint(env.game.dealerhand))
+print(env.game.playerhand)
+print(env.game.calculatepoint(env.game.playerhand))
