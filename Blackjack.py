@@ -13,8 +13,16 @@ class Blackjack:
         __stopPercentage = random.randint(45, 55)
         # Dealers hand
         self.dealerhand = list()
+        # Dealer busted
+        self.dealerbusted = False
+        # Dealer phase
+        self.dealerphasefihished = False
         # Player hand
         self.playerhand = list()
+        # Player busted
+        self.playerbusted = False
+        # Player phase
+        self.playerphasefihished = False
         # Calculate deck size
         self.totalCardCount = DECK_COUNT * ONE_DECK_SIZE
         # Cut card in deck
@@ -44,12 +52,14 @@ class Blackjack:
         self.deckofgamecards[card] = self.deckofgamecards[card] - 1
 
     def calculatesoft(self, hand):
+        soften = True
         soft = 0
         nonsoft = 0
         for handcard in hand:
             nonsoft += handcard
-            if handcard == 1:
+            if handcard == 1 and soften:
                 soft = soft + handcard + 10
+                soften = False
             else:
                 soft = soft + handcard
         return [nonsoft, soft]
@@ -61,3 +71,62 @@ class Blackjack:
         else:
             preresult = sum(hand)
             return [preresult, preresult]
+
+    def drawcardtohand(self, hand):
+        hand.append(self.getrandomcard())
+
+    def isbusted(self, hand):
+        calculatedpoints = self.calculatepoint(hand)
+        if calculatedpoints[0] > 21 and calculatedpoints[1] > 21:
+            return True
+        return False
+
+    #########################################################
+    def calculateresult(self, dealerhand, playerhand):
+        if self.playerphasefihished and self.dealerphasefihished:
+            dealerhandpoint = self.calculatepoint(dealerhand)
+            self.dealerbusted = self.isbusted()
+            playerhandpoint = self.calculatepoint(playerhand)
+
+    #########################################################
+
+    def preparenewround(self):
+        self.dealerhand.clear()
+        self.playerhand.clear()
+        self.dealerbusted = False
+        self.playerbusted = False
+        self.dealerphasefihished = False
+        self.playerphasefihished = False
+
+    # 0 STOP 1 DRAW CARD 2 DOUBLE
+    def playernextmove(self, playermove):
+        # print("playernext")
+        if playermove == 0:
+            self.playerphasefihished = True
+            self.finishdealerhand()
+        elif playermove == 1:
+            # print(self.playerhand)
+            self.drawcardtohand(self.playerhand)
+            # print(self.playerhand)
+            isbusted = self.isbusted(self.playerhand)
+            if isbusted:
+                self.playerbusted = isbusted
+                self.playerphasefihished = True
+        else:
+            self.drawcardtohand(self.playerhand)
+            isbusted = self.isbusted(self.playerhand)
+            self.playerbusted = isbusted
+            self.playerphasefihished = True
+
+    def finishdealerhand(self):
+        hand = self.calculatepoint(self.dealerhand)
+        if hand[0] >= 17 and hand[1] >= 17:
+            self.dealerphasefihished = True
+        isbusted = self.isbusted(self.dealerhand)
+        if isbusted:
+            self.dealerbusted = isbusted
+        if self.dealerphasefihished:
+            return
+        if hand[0] < 17 and hand[1] < 17:
+            self.drawcardtohand(self.dealerhand)
+            self.finishdealerhand()
