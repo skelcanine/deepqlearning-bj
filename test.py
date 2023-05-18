@@ -16,3 +16,9 @@ mlistt=[1]
 mlistt2=[2, 3]
 mlistt += mlistt2
 print(mlistt)
+print("@@@@@@@@@@@@@@")
+
+num = 0
+
+if  num:
+    print("x")
