@@ -112,11 +112,12 @@ class Blackjack:
             if isbusted:
                 self.playerbusted = isbusted
                 self.playerphasefihished = True
-        else:
+        elif playermove == 2:
             self.drawcardtohand(self.playerhand)
             isbusted = self.isbusted(self.playerhand)
             self.playerbusted = isbusted
             self.playerphasefihished = True
+            self.finishdealerhand()
 
     def finishdealerhand(self):
         hand = self.calculatepoint(self.dealerhand)
