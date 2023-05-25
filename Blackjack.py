@@ -73,7 +73,9 @@ class Blackjack:
             return [preresult, preresult]
 
     def drawcardtohand(self, hand):
-        hand.append(self.getrandomcard())
+        drawcard = self.getrandomcard()
+        hand.append(drawcard)
+        return drawcard
 
     def isbusted(self, hand):
         calculatedpoints = self.calculatepoint(hand)
@@ -106,18 +108,20 @@ class Blackjack:
             self.finishdealerhand()
         elif playermove == 1:
             # print(self.playerhand)
-            self.drawcardtohand(self.playerhand)
+            drawcard = self.drawcardtohand(self.playerhand)
             # print(self.playerhand)
             isbusted = self.isbusted(self.playerhand)
             if isbusted:
                 self.playerbusted = isbusted
                 self.playerphasefihished = True
+            return drawcard
         elif playermove == 2:
-            self.drawcardtohand(self.playerhand)
+            drawcard = self.drawcardtohand(self.playerhand)
             isbusted = self.isbusted(self.playerhand)
             self.playerbusted = isbusted
             self.playerphasefihished = True
             self.finishdealerhand()
+            return drawcard
 
     def finishdealerhand(self):
         hand = self.calculatepoint(self.dealerhand)

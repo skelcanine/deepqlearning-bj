@@ -9,15 +9,22 @@ TABLE_WIDTH = 1024
 TABLE_HEIGHT = 768
 FPS = 60
 DEFAULT_CARD_SIZE = (120, 180)
+DEFAULT_CARD_POSITION = (int(TABLE_WIDTH - (TABLE_WIDTH * 2 / 10)), int(TABLE_HEIGHT - (TABLE_HEIGHT * 9 / 10)))
+DEFAULT_MOVE = 4
 BACK_TO_OPEN_LENGTH = (TABLE_WIDTH * 1 / 10)
-MY_CARD_POSITION = (int(TABLE_WIDTH*4/10), int(TABLE_HEIGHT*7/10))
+MY_CARD_POSITION = (int(TABLE_WIDTH * 4 / 10), int(TABLE_HEIGHT * 7 / 10))
+DEALER_CARD_POSITION = (int(TABLE_WIDTH * 4 / 10), int(TABLE_HEIGHT * 1 / 10))
+
 
 class Table:
     class Card:
-        def __init__(self, x=0, y=0, card=1):
+        def __init__(self, x=0, y=0, card=1, show=1, placed=0, movedtimes=0):
             self.card = card
             self.x = x
             self.y = y
+            self.show = show
+            self.placed = placed
+            self.movedtimes = movedtimes
 
     def __init__(self):
         self.game = Blackjack.Blackjack()
@@ -26,6 +33,7 @@ class Table:
         self.isnewround = True
         self.tabledealercardlist = list()
         self.tablemycardlist = list()
+        self.cardphase = 0
 
     def checkdeckcardcount(self):
         if self.game.currentCardCount < self.game.cardCounttoStop:
@@ -38,13 +46,31 @@ class Table:
     def newround(self):
         self.checkdeckcardcount()
         self.isnewround = True
+        self.cardphase = 0
         self.game.preparenewround()
 
     def startnewround(self):
-        self.game.drawcardtohand(self.playerhand)
-        self.game.drawcardtohand(self.dealerhand)
-        self.game.drawcardtohand(self.playerhand)
-        self.game.drawcardtohand(self.dealerhand)
+        self.tabledealercardlist.clear()
+        self.tablemycardlist.clear()
+
+        # PLAYER
+        drawcard = self.game.drawcardtohand(self.playerhand)
+        newroundtempcard = env.Card(DEFAULT_CARD_POSITION[0], DEFAULT_CARD_POSITION[1], drawcard)
+        env.tablemycardlist.append(newroundtempcard)
+        # DEALER
+        drawcard = self.game.drawcardtohand(self.dealerhand)
+        newroundtempcard = env.Card(DEFAULT_CARD_POSITION[0], DEFAULT_CARD_POSITION[1], drawcard)
+        env.tabledealercardlist.append(newroundtempcard)
+        # PLAYER
+        drawcard = self.game.drawcardtohand(self.playerhand)
+        newroundtempcard = env.Card(DEFAULT_CARD_POSITION[0], DEFAULT_CARD_POSITION[1], drawcard)
+        env.tablemycardlist.append(newroundtempcard)
+        # DEALER
+        drawcard = self.game.drawcardtohand(self.dealerhand)
+        newroundtempcard = env.Card(DEFAULT_CARD_POSITION[0], DEFAULT_CARD_POSITION[1], drawcard, 0)
+        env.tabledealercardlist.append(newroundtempcard)
+
+
         self.isnewround = False
 
     def tablegenerate(self, playermove):
@@ -74,13 +100,17 @@ class Table:
                 return self.state() + [doneflag]
 
             if playermove == 1:
-                self.game.playernextmove(playermove)
+                drawcard = self.game.playernextmove(playermove)
+                newroundtempcard = env.Card(DEFAULT_CARD_POSITION[0], DEFAULT_CARD_POSITION[1], drawcard)
+                env.tablemycardlist.append(newroundtempcard)
                 if (
                         self.game.playerphasefihished and self.game.dealerphasefihished) or self.game.dealerbusted or self.game.playerbusted:
                     doneflag = 1
                     return self.state() + [doneflag]
             if playermove == 2:
-                self.game.playernextmove(playermove)
+                drawcard = self.game.playernextmove(playermove)
+                newroundtempcard = env.Card(DEFAULT_CARD_POSITION[0], DEFAULT_CARD_POSITION[1], drawcard)
+                env.tablemycardlist.append(newroundtempcard)
                 if (
                         self.game.playerphasefihished and self.game.dealerphasefihished) or self.game.dealerbusted or self.game.playerbusted:
                     doneflag = 1
@@ -203,6 +233,93 @@ card1 = pygame.transform.scale(card1, DEFAULT_CARD_SIZE)
 cardddd = env.Card(MY_CARD_POSITION[0], MY_CARD_POSITION[1], 10)
 
 env.tablemycardlist.append(cardddd)
+playercardxres = int(DEFAULT_CARD_POSITION[0]/2)
+dealercardxres = int(DEALER_CARD_POSITION[0])
+
+
+def drawplaced():
+    global playercardxres, dealercardxres
+    for carditem in env.tablemycardlist:
+        if carditem.placed:
+            cardidentity = pygame.image.load(cards[carditem.card-1])
+            cardidentity = pygame.transform.scale(cardidentity, DEFAULT_CARD_SIZE)
+            screen.blit(cardidentity, (carditem.x, carditem.y))
+
+    for carditem in env.tabledealercardlist:
+        if carditem.placed:
+            if carditem.show:
+                cardidentity = pygame.image.load(cards[carditem.card-1])
+                cardidentity = pygame.transform.scale(cardidentity, DEFAULT_CARD_SIZE)
+                screen.blit(cardidentity, (carditem.x, carditem.y))
+            else:
+                cardidentity = pygame.transform.scale(movingcardback.copy(), DEFAULT_CARD_SIZE)
+                cardidentity = pygame.transform.scale(cardidentity, DEFAULT_CARD_SIZE)
+                screen.blit(cardidentity, (carditem.x, carditem.y))
+
+
+def movecard():
+    global playercardxres, dealercardxres
+    drawplaced()
+    side = env.cardphase % 2
+    cardtomoveno = math.floor(env.cardphase / 2)
+    drawplaced()
+
+    # PASS IF NO CARD
+
+    if env.cardphase == 5:
+        return
+
+
+
+    if side:
+        cardtomove = env.tabledealercardlist[cardtomoveno]
+        print(cardtomoveno)
+        print("xxxxxxxxxxxxxxxxxxx" + str(env.tabledealercardlist[0].show))
+        #print(cardtomove.show)
+        if cardtomove.movedtimes >= 25 and cardtomove.show:
+            cardidentity = pygame.image.load(cards[cardtomove.card - 1])
+            cardidentity = pygame.transform.scale(cardidentity, DEFAULT_CARD_SIZE)
+            cardtomove.x -= DEFAULT_MOVE
+            screen.blit(cardidentity, (cardtomove.x, cardtomove.y))
+            #print(str(cardtomove.x) + "@@@" + str(dealercardxres))
+            if cardtomove.x < dealercardxres:
+                dealercardxres = 20 + dealercardxres
+                cardtomove.placed = 1
+                env.cardphase += 1
+
+        else:
+            cardidentity = pygame.transform.scale(movingcardback.copy(), DEFAULT_CARD_SIZE)
+            cardtomove.x -= DEFAULT_MOVE
+            screen.blit(cardidentity, (cardtomove.x, cardtomove.y))
+            cardtomove.movedtimes += 1
+            if cardtomove.x < dealercardxres:
+                dealercardxres = 20 + dealercardxres
+                cardtomove.placed = 1
+                env.cardphase += 1
+
+    else:
+        cardtomove = env.tablemycardlist[cardtomoveno]
+
+        if cardtomove.movedtimes >= 25 and cardtomove.show and not cardtomove.placed:
+            cardidentity = pygame.image.load(cards[cardtomove.card-1])
+            cardidentity = pygame.transform.scale(cardidentity, DEFAULT_CARD_SIZE)
+            cardtomove.x -= DEFAULT_MOVE
+            cardtomove.y += DEFAULT_MOVE
+            screen.blit(cardidentity, (cardtomove.x, cardtomove.y))
+            #print(str(cardtomove.x)+"@@@"+str(playercardxres))
+            if cardtomove.x < playercardxres:
+                playercardxres = 20 + playercardxres
+                cardtomove.placed = 1
+                env.cardphase += 1
+
+        else:
+            cardidentity = pygame.transform.scale(movingcardback.copy(), DEFAULT_CARD_SIZE)
+            cardtomove.x -= DEFAULT_MOVE
+            cardtomove.y += DEFAULT_MOVE
+            screen.blit(cardidentity, (cardtomove.x, cardtomove.y))
+            cardtomove.movedtimes += 1
+
+
 
 
 while running:
@@ -216,23 +333,18 @@ while running:
     # RENDER YOUR GAME HERE
 
     current_time = pygame.time.get_ticks()
-    if current_time % 20 == 0:
+    if current_time % 10 == 0:
         screen.blit(bacground, (0, 0))
-        screen.blit(cardback, (TABLE_WIDTH - (TABLE_WIDTH * 2 / 10), TABLE_HEIGHT - (TABLE_HEIGHT * 9 / 10)))
+        screen.blit(cardback, DEFAULT_CARD_POSITION)
+        movecard()
+        """
         for mycard in env.tablemycardlist:
-            tempcard = pygame.image.load(cards[mycard.card-1])
+            #print(type(mycard))
+            tempcard = pygame.image.load(cards[mycard.card - 1])
             tempcard = pygame.transform.scale(tempcard, DEFAULT_CARD_SIZE)
             screen.blit(tempcard, (mycard.x, mycard.y))
+        """
 
-        if xmove > -550:
-            if xmove * -1 <= BACK_TO_OPEN_LENGTH:
-                screen.blit(movingcardback,
-                            (TABLE_WIDTH - (TABLE_WIDTH * 2 / 10) + xmove, TABLE_HEIGHT - (TABLE_HEIGHT * 9 / 10)))
-                xmove -= 4
-            else:
-                screen.blit(card1,
-                            (TABLE_WIDTH - (TABLE_WIDTH * 2 / 10) + xmove, TABLE_HEIGHT - (TABLE_HEIGHT * 9 / 10)))
-                xmove -= 4
 
     # flip() the display to put your work on screen
     pygame.display.update()
