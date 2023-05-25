@@ -125,6 +125,7 @@ class Blackjack:
 
     def finishdealerhand(self):
         hand = self.calculatepoint(self.dealerhand)
+        print(hand)
         if hand[0] >= 17 and hand[1] >= 17:
             self.dealerphasefihished = True
         isbusted = self.isbusted(self.dealerhand)
